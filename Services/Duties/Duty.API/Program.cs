@@ -38,19 +38,18 @@ builder.Services.AddMarten(opts =>
     opts.Connection(builder.Configuration.GetConnectionString("Database")!);
 }).UseLightweightSessions();//.InitializeWith<InitialData>();
 
-builder.Services.AddMassTransit(configurator =>
+builder.Services.AddMassTransit(busConfigurator =>
 {
-    configurator.SetKebabCaseEndpointNameFormatter();
-
-    configurator.AddConsumer<UserRegisteredEventConsumer>();
-    configurator.AddConsumer<UserRoleUpdatedConsumer>();
-
-    configurator.UsingRabbitMq((context, factoryConfigurator) =>
+    busConfigurator.UsingRabbitMq((context, factoryConfigurator) =>
     {
-        factoryConfigurator.Host("messagebroker", "/", hostConfigurator =>
+        var brokerHost = builder.Configuration["MessageBroker:Host"];
+        var brokerUsername = builder.Configuration["MessageBroker:Username"];
+        var brokerPassword = builder.Configuration["MessageBroker:Password"];
+
+        factoryConfigurator.Host(brokerHost, "/", hostConfigurator =>
         {
-            hostConfigurator.Username("guest");
-            hostConfigurator.Password("guest");
+            hostConfigurator.Username(brokerUsername);
+            hostConfigurator.Password(brokerPassword);
         });
 
         factoryConfigurator.ConfigureEndpoints(context);

@@ -38,8 +38,12 @@ public class LoginUserHandler(IDocumentSession documentSession, IConfiguration c
             {
                 using var httpClient = new HttpClient();
 
-                // WARNING: port for Duty.API!
-                var response = await httpClient.GetAsync($"http://duty.api:8080/employees/by-user/{user.Id}");
+                var dutyApiBaseUrl = configuration["ApiSettings:DutyApiBaseUrl"] ?? "http://localhost:5000";
+
+                var requestUrl = $"{dutyApiBaseUrl.TrimEnd('/')}/employees/by-user/{user.Id}";
+
+                // 3. Make the HTTP GET request
+                var response = await httpClient.GetAsync(requestUrl);
 
                 if (response.IsSuccessStatusCode)
                 {

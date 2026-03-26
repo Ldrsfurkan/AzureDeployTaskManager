@@ -9,7 +9,8 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient<AuthService>(client =>
 {
-    client.BaseAddress = new Uri("http://auth.api:8080/");
+    var dutyApiBaseUrl = builder.Configuration["ApiSettings:AuthApiBaseUrl"];
+    client.BaseAddress = new Uri(dutyApiBaseUrl!);
 });
 /*.ConfigurePrimaryHttpMessageHandler(() =>
 {
@@ -22,12 +23,14 @@ builder.Services.AddHttpClient<AuthService>(client =>
 
 builder.Services.AddHttpClient<DutyService>(client =>
 {
-    client.BaseAddress = new Uri("http://duty.api:8080/");
+    var dutyApiBaseUrl = builder.Configuration["ApiSettings:DutyApiBaseUrl"];
+    client.BaseAddress = new Uri(dutyApiBaseUrl!);
 });
 
 builder.Services.AddHttpClient<ClientsService>(client =>
 {
-    client.BaseAddress = new Uri("http://duty.api:8080/");
+    var dutyApiBaseUrl = builder.Configuration["ApiSettings:DutyApiBaseUrl"];
+    client.BaseAddress = new Uri(dutyApiBaseUrl!);
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

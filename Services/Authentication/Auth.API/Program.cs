@@ -22,17 +22,19 @@ builder.Services.AddCarter();
 
 builder.Services.AddMassTransit(busConfigurator =>
 {
-    busConfigurator.SetKebabCaseEndpointNameFormatter();
-
-    busConfigurator.UsingRabbitMq((context, configurator) =>
+    busConfigurator.UsingRabbitMq((context, factoryConfigurator) =>
     {
-        configurator.Host("messagebroker", "/", hostConfigurator =>
+        var brokerHost = builder.Configuration["MessageBroker:Host"];
+        var brokerUsername = builder.Configuration["MessageBroker:Username"];
+        var brokerPassword = builder.Configuration["MessageBroker:Password"];
+
+        factoryConfigurator.Host(brokerHost, "/", hostConfigurator =>
         {
-            hostConfigurator.Username("guest");
-            hostConfigurator.Password("guest");
+            hostConfigurator.Username(brokerUsername);
+            hostConfigurator.Password(brokerPassword);
         });
 
-        configurator.ConfigureEndpoints(context);
+        factoryConfigurator.ConfigureEndpoints(context);
     });
 });
 
