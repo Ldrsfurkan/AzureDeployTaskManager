@@ -1,0 +1,50 @@
+name: Microservices Build and Push to ACR
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+  DUTY_API_IMAGE: duty-api
+  AUTH_API_IMAGE: auth-api
+  WEB_APP_IMAGE: web-application
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and Push Duty API
+        run: |
+          docker build -f src/Duty.API/Dockerfile -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.DUTY_API_IMAGE }}:${{ github.sha }} .
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.DUTY_API_IMAGE }}:${{ github.sha }}
+          # Tag as latest for easier pulling
+          docker tag ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.DUTY_API_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.DUTY_API_IMAGE }}:latest
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.DUTY_API_IMAGE }}:latest
+
+      - name: Build and Push Auth API
+        run: |
+          docker build -f src/Auth.API/Dockerfile -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.AUTH_API_IMAGE }}:${{ github.sha }} .
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.AUTH_API_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.AUTH_API_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.AUTH_API_IMAGE }}:latest
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.AUTH_API_IMAGE }}:latest
+
+      - name: Build and Push Web Application
+        run: |
+          docker build -f src/WebApplication/Dockerfile -t ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.WEB_APP_IMAGE }}:${{ github.sha }} .
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.WEB_APP_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.WEB_APP_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.WEB_APP_IMAGE }}:latest
+          docker push ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.WEB_APP_IMAGE }}:latest
+          
