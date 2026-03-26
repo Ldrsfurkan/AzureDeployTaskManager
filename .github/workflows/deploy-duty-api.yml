@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Services/Duties/Duty.API/**'
+      - '.github/workflows/**'
 
 env:
   AZURE_WEBAPP_NAME: 'dutyapi'
