@@ -5,12 +5,12 @@ on:
     branches:
       - master
     paths:
-      - 'WebApplication/**' 
+      - 'WebApplication/TaskManager.Web/**' 
       - '.github/workflows/**'
 
 env:
   AZURE_WEBAPP_NAME: 'taskmanager'
-  PROJECT_PATH: 'WebApplication/TaskManager.Web.csproj'
+  PROJECT_PATH: 'WebApplication/TaskManager.Web/TaskManager.Web.csproj'
   DOTNET_VERSION: '8.0.x'
 
 jobs:

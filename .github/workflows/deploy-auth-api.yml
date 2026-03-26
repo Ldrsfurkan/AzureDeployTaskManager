@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - 'Services/Authentication/Auth.API/**'
-      - '.github/workflows/**'
 
 env:
   AZURE_WEBAPP_NAME: 'authapi'
