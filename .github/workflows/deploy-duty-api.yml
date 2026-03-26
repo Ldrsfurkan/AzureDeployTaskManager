@@ -1,0 +1,39 @@
+name: Deploy Duty API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Services/Duties/Duty.API/**'
+
+env:
+  AZURE_WEBAPP_NAME: 'dutyapi'
+  PROJECT_PATH: 'Services/Duties/Duty.API/Duty.API.csproj'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build project
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release
+
+      - name: Publish project
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ./publish_folder
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.DUTY_API_PUBLISH_PROFILE }}
+          package: ./publish_folder

@@ -1,0 +1,39 @@
+name: Deploy Auth API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Services/Authentication/Auth.API/**'
+
+env:
+  AZURE_WEBAPP_NAME: 'authapi'
+  PROJECT_PATH: 'Services/Authentication/Auth.API/Auth.API.csproj'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build project
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release
+
+      - name: Publish project
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ./publish_folder
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AUTH_API_PUBLISH_PROFILE }}
+          package: ./publish_folder
