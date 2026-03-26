@@ -1,0 +1,106 @@
+﻿@using BuildingBlocks.Contracts.DutyContracts
+@model IEnumerable<DutyDto>
+
+@{
+    ViewData["Title"] = "My Tasks Dashboard";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary mb-0">My Tasks Dashboard</h2>
+        <span class="text-muted fw-bold border rounded px-3 py-1">Total Assigned: @Model.Count()</span>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm" role="alert">
+            You currently have no tasks assigned. Great job!
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var duty in Model)
+            {
+                // Dynamic styling based on the new English Enum
+                string badgeClass = duty.Status switch
+                {
+                    "TAMAMLANDI" => "bg-success",
+                    "DEVAM_EDIYOR" => "bg-primary",
+                    "YANIT_BEKLENIYOR" => "bg-info text-dark",
+                    "KULLANCI_ONAYI_BEKLENIYOR" => "bg-warning text-dark",
+                    "TEST_BEKLENIYOR" => "bg-warning text-dark",
+                    "IPTAL_EDILDI" => "bg-danger",
+                    _ => "bg-dark"
+                };
+
+                string borderClass = duty.Status switch
+                {
+                    "TAMAMLANDI" => "border-success",
+                    "DEVAM_EDIYOR" => "border-primary",
+                    "YANIT_BEKLENIYOR" => "border-info",
+                    "KULLANCI_ONAYI_BEKLENIYOR" => "border-warning",
+                    "TEST_BEKLENIYOR" => "border-warning",
+                    "IPTAL_EDILDI" => "border-danger",
+                    _ => "border-dark"
+                };
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-top-0 border-end-0 border-bottom-0 border-start border-4 @borderClass">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge rounded-pill @badgeClass px-3 py-2">@duty.Status</span>
+                                <span class="badge bg-light text-dark border">Priority: @duty.Priority</span>
+                            </div>
+
+                            <h5 class="card-title fw-bold mt-2">@duty.Description</h5>
+                            <p class="card-text text-muted small mb-3">@duty.MailDescription</p>
+
+                            <div class="mt-auto">
+                                <hr class="text-muted opacity-25">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted fw-bold">Client: @duty.ClientName</small>
+                                    <small class="text-muted">@duty.CreatedAt.ToString("dd MMM yyyy")</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+                            <form asp-controller="Duty" asp-action="UpdateTaskStatus" method="post" class="d-flex mt-2">
+                                <input type="hidden" name="Id" value="@duty.Id" />
+                                <input type="hidden" name="Description" value="@duty.Description" />
+                                <input type="hidden" name="MailDescription" value="@duty.MailDescription" />
+                                <input type="hidden" name="Priority" value="@duty.Priority" />
+                                <input type="hidden" name="AssignedEmployeeId" value="@duty.AssignedEmployeeId" />
+                                <input type="hidden" name="ClientId" value="@duty.ClientId" />
+
+                                <select name="Status" class="form-select form-select-sm me-2 fw-bold text-secondary">
+                                    @foreach (var status in Enum.GetNames(typeof(DutyStatus)))
+                                    {
+                                        if (status == duty.Status)
+                                        {
+                                            <option value="@status" selected>@status</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@status">@status</option>
+                                        }
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-primary px-3 fw-bold">Save</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

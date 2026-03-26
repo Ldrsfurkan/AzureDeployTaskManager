@@ -1,0 +1,33 @@
+﻿@using BuildingBlocks.Contracts.DutyContracts
+@model IEnumerable<DutyDto>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm" role="alert">
+        This client currently has no assigned tasks.
+    </div>
+}
+else
+{
+    <table class="table table-hover table-striped border">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var duty in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@duty.Description</td>
+                    <td>
+                        <span class="badge bg-info text-dark border">@duty.Status</span>
+                    </td>
+                    <td>@duty.CreatedAt.ToString("dd-MM-yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

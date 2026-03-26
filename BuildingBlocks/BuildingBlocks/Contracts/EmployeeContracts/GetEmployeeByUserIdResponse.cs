@@ -1,0 +1,3 @@
+﻿namespace BuildingBlocks.Contracts.EmployeeContracts;
+
+public record GetEmployeeByUserIdResponse(EmployeeDto Employee);

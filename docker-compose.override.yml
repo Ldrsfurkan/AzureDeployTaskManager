@@ -1,0 +1,77 @@
+services:
+  dutydb:
+    container_name: dutydb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=DutyDb
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_duty:/var/lib/postgresql
+
+  userdb:
+    container_name: userdb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=UserDb
+    restart: always
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_user:/var/lib/postgresql
+
+  messagebroker:
+    container_name: messagebroker
+    image: rabbitmq:3-management
+    healthcheck:
+        test: ["CMD", "rabbitmqctl", "status"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  duty.api:
+    container_name: duty.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Database=Server=dutydb;Port=5432;Database=DutyDb;User Id=postgres;Password=postgres;Include Error Detail=true
+    depends_on:
+      - dutydb
+    ports:
+      - "6000:8080"
+      - "6060:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  auth.api:
+    container_name: auth.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Database=Server=userdb;Port=5432;Database=UserDb;User Id=postgres;Password=postgres;Include Error Detail=true
+    depends_on:
+        messagebroker:
+                  condition: service_healthy
+    ports:
+      - "6001:8080"
+      - "6061:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  taskmanager.web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "6005:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

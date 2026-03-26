@@ -1,0 +1,73 @@
+﻿@using BuildingBlocks.Contracts.DutyContracts
+
+<div class="modal fade" id="editDutyModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editModalLabel">Edit Duty</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Duty" asp-action="EditDuty" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="edit-id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <input type="text" name="Description" id="edit-description" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mail Description</label>
+                        <textarea name="MailDescription" id="edit-maildescription" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Priority</label>
+                            <input type="number" name="Priority" id="edit-priority" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="Status" id="edit-status" class="form-select" required>
+                                <option value="">Select...</option>
+                                @foreach (var statusName in Enum.GetNames(typeof(DutyStatus)))
+                                {
+                                    <option value="@statusName">@statusName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Assigned Employee</label>
+                            <select name="AssignedEmployeeId" id="edit-employee" class="form-select">
+                                <option value="">Unassigned</option>
+                                @if (ViewBag.Employees != null)
+                                {
+                                    foreach (var employee in ViewBag.Employees)
+                                    {
+                                        <option value="@employee.Id">@employee.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Client</label>
+                            <select name="ClientId" id="edit-client" class="form-select">
+                                <option value="">No Client</option>
+                                @if (ViewBag.Clients != null)
+                                {
+                                    foreach (var client in ViewBag.Clients)
+                                    {
+                                        <option value="@client.Id">@client.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Duty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

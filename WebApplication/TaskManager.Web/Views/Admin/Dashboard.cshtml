@@ -1,0 +1,242 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="text-danger fw-bold mb-4">Admin Dashboard</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees" type="button" role="tab">
+                Employees & Tasks
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="clients-tab" data-bs-toggle="tab" data-bs-target="#clients" type="button" role="tab">
+                Clients & Tasks
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                Users & Roles
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+
+        <div class="tab-pane fade show active" id="employees" role="tabpanel">
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-dark text-white fw-bold">Employees</div>
+                        <div class="list-group list-group-flush">
+                            @if (ViewBag.Employees != null)
+                            {
+                                foreach (var employee in ViewBag.Employees)
+                                {
+                                    <button type="button" class="list-group-item list-group-item-action employee-btn fw-bold text-secondary" data-id="@employee.Id">
+                                        @employee.Name
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="card shadow-sm border-0" style="min-height: 500px;">
+                        <div class="card-header bg-white fw-bold text-primary">
+                            <span id="selectedEmployeeName">Select an employee from the left menu</span>
+                            <div class="spinner-border spinner-border-sm text-primary d-none ms-2" id="employeeSpinner" role="status"></div>
+                        </div>
+                        <div class="card-body bg-light" id="employeeTasksContainer">
+                            <p class="text-muted text-center mt-5">Click on an employee to view their tasks.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="clients" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+                            <span>Clients</span>
+                        </div>
+
+                        <div class="card-body border-bottom bg-light">
+                            <form action="/admin/add-client" method="post" class="d-flex">
+                                <input type="text" name="Name" class="form-control form-control-sm me-2" placeholder="New Client Name" required />
+                                <button type="submit" class="btn btn-sm btn-success fw-bold">Add</button>
+                            </form>
+                        </div>
+
+                        <ul class="list-group list-group-flush">
+                            @if (ViewBag.Clients != null)
+                            {
+                                foreach (var client in ViewBag.Clients)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center p-0">
+                                        <button type="button" class="list-group-item-action border-0 bg-transparent p-3 client-btn fw-bold text-secondary text-start w-100" data-id="@client.Id">
+                                            @client.Name
+                                        </button>
+
+                                        <form action="/admin/delete-client" method="post" class="pe-3 m-0" onsubmit="return confirm('Are you sure you want to delete this client?');">
+                                            <input type="hidden" name="id" value="@client.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card shadow-sm border-0" style="min-height: 500px;">
+                        <div class="card-header bg-primary text-white fw-bold">
+                            <span id="selectedClientName">Client Duties</span>
+                            <div class="spinner-border spinner-border-sm text-light d-none ms-2" id="clientSpinner" role="status"></div>
+                        </div>
+                        <div class="card-body bg-light" id="clientTasksContainer">
+                            <p class="text-muted text-center mt-5">Select a client to view duties.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white fw-bold">
+                    System Users Authorization
+                </div>
+                <div class="card-body bg-light">
+                    <table class="table table-hover bg-white border shadow-sm">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Current Role</th>
+                                <th>Change Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.Users != null)
+                            {
+                                foreach (var user in ViewBag.Users)
+                                {
+                                    <tr>
+                                        <td class="align-middle fw-bold">@user.Id</td>
+                                        <td class="align-middle">@user.Username</td>
+                                        <td class="align-middle">
+                                            @{
+                                                string badgeColor = user.Role switch
+                                                {
+                                                    "Admin" => "bg-danger",
+                                                    "Employee" => "bg-success",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @badgeColor px-3 py-2">@(string.IsNullOrEmpty(user.Role) ? "None" : user.Role)</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <form action="/admin/update-user-role" method="post" class="d-flex align-items-center m-0 me-3">
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <input type="hidden" name="username" value="@user.Username" />
+                                                    <select name="role" class="form-select form-select-sm me-2" style="width: 130px;">
+                                                        <option value="None" selected="@(user.Role == "None")">None</option>
+                                                        <option value="Employee" selected="@(user.Role == "Employee")">Employee</option>
+                                                        <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary fw-bold">Update</button>
+                                                </form>
+
+                                                <form action="/admin/delete-user" method="post" class="m-0" onsubmit="return confirm('Are you sure you want to permanently delete this user?');">
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-danger fw-bold px-3">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // --- EMPLOYEE AJAX (Event Delegation) ---
+            $(document).on('click', '.employee-btn', function () {
+                var btn = $(this);
+                var employeeId = btn.data('id');
+                var employeeName = btn.text().trim();
+
+                // Görsel güncellemeler
+                $('.employee-btn').removeClass('active bg-primary text-white border-primary');
+                btn.addClass('active bg-primary text-white border-primary');
+
+                $('#selectedEmployeeName').text(employeeName + "'s Tasks");
+                $('#employeeSpinner').removeClass('d-none');
+                $('#employeeTasksContainer').fadeTo(200, 0.4);
+
+                // API Çağrısı
+                $.get('/admin/employee-tasks/' + employeeId, function (data) {
+                    $('#employeeTasksContainer').html(data);
+                    $('#employeeTasksContainer').fadeTo(200, 1);
+                    $('#employeeSpinner').addClass('d-none');
+                }).fail(function() {
+                    $('#employeeTasksContainer').html('<div class="alert alert-danger mt-3">Failed to load duties.</div>');
+                    $('#employeeTasksContainer').fadeTo(200, 1);
+                    $('#employeeSpinner').addClass('d-none');
+                });
+            });
+
+            // --- CLIENT AJAX (Event Delegation) ---
+            $(document).on('click', '.client-btn', function () {
+                var btn = $(this);
+                var clientId = btn.data('id');
+                var clientName = btn.text().trim();
+
+                // Görsel güncellemeler
+                $('.client-btn').removeClass('active bg-primary text-white border-primary fw-bold text-secondary');
+                btn.addClass('active bg-primary text-white border-primary');
+
+                $('#selectedClientName').text(clientName + " - Duties");
+                $('#clientSpinner').removeClass('d-none');
+                $('#clientTasksContainer').fadeTo(200, 0.4);
+
+                // API Çağrısı
+                $.get('/admin/client-tasks/' + clientId, function (data) {
+                    $('#clientTasksContainer').html(data);
+                    $('#clientTasksContainer').fadeTo(200, 1);
+                    $('#clientSpinner').addClass('d-none');
+                }).fail(function() {
+                    $('#clientTasksContainer').html('<div class="alert alert-danger mt-3">Failed to load client duties.</div>');
+                    $('#clientTasksContainer').fadeTo(200, 1);
+                    $('#clientSpinner').addClass('d-none');
+                });
+            });
+
+        });
+    </script>
+}

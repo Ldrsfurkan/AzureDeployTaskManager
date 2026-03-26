@@ -1,0 +1,34 @@
+services:
+    dutydb:
+        image: postgres
+    userdb:
+        image: postgres
+
+    messagebroker:
+        image: rabbitmq:3-management
+
+    duty.api:
+        image: ${DOCKER_REGISTRY-}duty.api
+        build:
+            context: .
+            dockerfile: Services/Duties/Duty.Api/Dockerfile
+
+    auth.api:
+        image: ${DOCKER_REGISTRY-}auth.api
+        build:
+            context: .
+            dockerfile: Services/Authentication/Auth.Api/Dockerfile
+    
+    taskmanager.web:
+        build:
+            context: .
+            dockerfile: WebApplication/TaskManager.Web/Dockerfile
+        image: taskmanager.web:latest
+        depends_on:
+        - auth.api
+        - duty.api
+
+ 
+volumes:
+    postgres_duty:
+    postgres_user:

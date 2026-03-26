@@ -1,0 +1,11 @@
+﻿global using Marten;
+global using Carter;
+global using Duty.API.Models;
+global using BuildingBlocks.CQRS;
+global using MediatR;
+global using Mapster;
+global using DutyEntity = Duty.API.Models.Duty;
+global using Duty.API.Exceptions;
+global using MassTransit;
+global using BuildingBlocks.Contracts.DutyContracts;
+global using BuildingBlocks.Contracts.ClientContracts;

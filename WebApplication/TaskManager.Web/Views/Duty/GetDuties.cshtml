@@ -1,0 +1,178 @@
+﻿@using BuildingBlocks.Contracts.DutyContracts
+@model IEnumerable<DutyDto>
+
+@{
+    ViewData["Title"] = "Duty List";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary mb-0">Duty List</h2>
+
+        <button type="button" class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#createDutyModal">
+            + Create New Duty
+        </button>
+    </div>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <ul class="nav nav-tabs mb-4" id="dutyTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="all-tab" data-bs-toggle="tab" data-status="" type="button" role="tab">TUM CALISMALAR</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-primary fw-bold" id="devamediyor-tab" data-bs-toggle="tab" data-status="DEVAM_EDIYOR" type="button" role="tab">DEVAM EDENLER</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-warning fw-bold" id="yanit-tab" data-bs-toggle="tab" data-status="YANIT_BEKLENIYOR,KULLANCI_ONAYI_BEKLENIYOR" type="button" role="tab">YANIT BEKLENIYOR</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-success fw-bold" id="tamamlandi-tab" data-bs-toggle="tab" data-status="TEST_BEKLENIYOR" type="button" role="tab">TEST BEKLENIYOR</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-success fw-bold" id="tamamlandi-tab" data-bs-toggle="tab" data-status="TAMAMLANDI" type="button" role="tab">TAMAMLANANLAR</button>
+        </li>
+    </ul>
+
+
+    <table id="dutyTable" class="table table-striped table-hover table-bordered w-100">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th>Description</th>
+                <th>Mail Description</th>
+                <th>Status</th>
+                <th>Employee</th>
+                <th>Client</th>
+                <th>Priority</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var duty in Model)
+                {
+                    // Determine the badge color based on the status
+                    string badgeClass = duty.Status switch
+                    {
+                        "TAMAMLANDI" => "bg-success",
+                        "DEVAM_EDIYOR" => "bg-primary",
+                        "YANIT_BEKLENIYOR" => "bg-warning text-dark",
+                        "TEST_BEKLENIYOR" => "bg-warning text-dark",
+                        "KULLANCI_ONAYI_BEKLENIYOR" => "bg-warning text-dark",
+                        _ => "bg-secondary" // Default color for any other status
+                    };
+
+                    <tr>
+                        <td>@duty.Description</td>
+                        <td>@duty.MailDescription</td>
+
+                        <td class="text-center align-middle">
+                            <span class="badge rounded-pill px-3 py-2 @badgeClass" style="font-size: 0.85rem;">@duty.Status</span>
+                        </td>
+
+                        <td>@duty.AssignedEmployeeName</td>
+                        <td>@duty.ClientName</td>
+                        <td>@duty.Priority</td>
+                        <td>@duty.CreatedAt.ToString("dd-MM-yyyy HH:mm")</td>
+                        <td>@(duty.UpdatedAt is DateTime updated ? updated.ToString("dd-MM-yyyy HH:mm") : "Not Updated Yet")</td>
+                        <td>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <button type="button" class="btn btn-sm btn-warning shadow-sm me-2 edit-duty-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editDutyModal"
+                                        data-id="@duty.Id"
+                                        data-description="@duty.Description"
+                                        data-maildescription="@duty.MailDescription"
+                                        data-priority="@duty.Priority"
+                                        data-status="@duty.Status"
+                                        data-employee="@duty.AssignedEmployeeId"
+                                        data-client="@duty.ClientId">
+                                    Edit
+                                </button>
+
+                                <form asp-controller="Duty" asp-action="DeleteDuty" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this duty?');">
+                                    <input type="hidden" name="id" value="@duty.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger shadow-sm">Delete</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modals-->
+<partial name="_CreateDutyModal" />
+<partial name="_EditDutyModal" />
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+             // Initialize DataTable
+             var table = $('#dutyTable').DataTable({
+                 "paging": true,
+                 "ordering": true,
+                 "info": true,
+                 "searching": true,
+                 "order": [[0, "desc"]]
+             });
+
+             // Handle Tab Clicks to Filter the Table
+         $('#dutyTabs button[data-bs-toggle="tab"]').on('shown.bs.tab', function (event) {
+
+            var selectedStatus = $(event.target).data('status');
+
+            if (!selectedStatus) {
+                table.column(2).search('').draw();
+            } else {
+
+                // virgül ile gelen statusları ayır
+                var statuses = selectedStatus.split(",");
+
+                // regex OR oluştur
+                var regex = statuses.join("|");
+
+                table.column(2).search(regex, true, false).draw();
+            }
+        });
+
+             // Event Delegation for Edit Buttons (Unchanged)
+             $('#dutyTable tbody').on('click', '.edit-duty-btn', function () {
+                 var btn = $(this);
+
+                 $('#edit-id').val(btn.data('id'));
+                 $('#edit-description').val(btn.data('description'));
+                 $('#edit-maildescription').val(btn.data('maildescription'));
+                 $('#edit-priority').val(btn.data('priority'));
+                 $('#edit-status').val(btn.data('status'));
+                 $('#edit-employee').val(btn.data('employee'));
+                 $('#edit-client').val(btn.data('client'));
+             });
+         });
+    </script>
+}
