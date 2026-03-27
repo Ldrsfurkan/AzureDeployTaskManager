@@ -67,7 +67,6 @@ builder.Services.AddScoped<AuthorizationHandler>();
 builder.Services.AddScoped<GetUsersHandler>();
 builder.Services.AddScoped<DeleteUserHandler>();
 builder.Services.AddScoped<UpdateUserRoleHandler>();
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

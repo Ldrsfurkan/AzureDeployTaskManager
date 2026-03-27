@@ -7,56 +7,44 @@ namespace Auth.API.Features.UpdateUser;
 public record UpdateUserRoleCommand(int UserId, string Role) : ICommand<UpdateUserRoleResult>;
 public record UpdateUserRoleResult(bool IsSuccess);
 
-public class UpdateUserRoleHandler
+public class UpdateUserRoleHandler(IDocumentSession session, HttpClient httpClient, IConfiguration configuration)
 {
-    private readonly IDocumentSession _session;
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
-
-    public UpdateUserRoleHandler(IDocumentSession session, HttpClient httpClient, IConfiguration configuration)
-    {
-        _session = session;
-        _httpClient = httpClient;
-        _configuration = configuration;
-    }
-
     public async Task<UpdateUserRoleResult> HandleAsync(UpdateUserRoleCommand command)
     {
-        var user = await _session.LoadAsync<User>(command.UserId);
+        var user = await session.LoadAsync<User>(command.UserId);
 
         if (user == null)
             return new UpdateUserRoleResult(false);
 
         user.Role = command.Role;
 
-        _session.Update(user);
-        await _session.SaveChangesAsync();
+        session.Update(user);
+        await session.SaveChangesAsync();
 
-        if (command.Role.Equals("Employee", StringComparison.OrdinalIgnoreCase))
+        if (command.Role == "Employee")
         {
             try
             {
-                var dutyApiBaseUrl = _configuration["ApiSettings:DutyApiBaseUrl"];
-                if (string.IsNullOrEmpty(dutyApiBaseUrl))
-                    throw new Exception("DutyApiBaseUrl config bulunamadı");
+                var dutyApiBaseUrl = configuration["ApiSettings:DutyApiBaseUrl"];
+                var requestUrl = $"{dutyApiBaseUrl?.TrimEnd('/')}/employees";
 
-                var requestUrl = dutyApiBaseUrl.TrimEnd('/') + "/employees";
-
-                var response = await _httpClient.PostAsJsonAsync(requestUrl, new
-                {
-                    userId = user.Id,
-                    name = user.Username
-                });
+                var response = await httpClient.PostAsJsonAsync(
+                    requestUrl,
+                    new
+                    {
+                        userId = user.Id,
+                        name = user.Username
+                    });
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Employee creation failed: {error}");
+                    throw new Exception("Employee creation failed");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Employee oluşturulamadı: {ex.Message}");
+                // Updated to English log message
+                Console.WriteLine($"Failed to create employee: {ex.Message}");
                 return new UpdateUserRoleResult(false);
             }
         }
