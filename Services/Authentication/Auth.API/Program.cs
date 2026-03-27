@@ -5,6 +5,7 @@ using Auth.API.Features.GetUsers;
 using Auth.API.Features.Login;
 using Auth.API.Features.Register;
 using Auth.API.Features.UpdateUser;
+using BuildingBlocks.CQRS;
 using Carter;
 using Marten;
 using MassTransit;
@@ -64,10 +65,9 @@ builder.Services.AddScoped<RegisterUserHandler>();
 builder.Services.AddScoped<LoginUserHandler>();
 builder.Services.AddScoped<AuthorizationHandler>();
 builder.Services.AddScoped<GetUsersHandler>();
-builder.Services.AddScoped<UpdateUserRoleHandler>();
 builder.Services.AddScoped<DeleteUserHandler>();
-builder.Services.AddHttpClient<UpdateUserRoleHandler>();
-
+builder.Services.AddScoped<UpdateUserRoleHandler>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
