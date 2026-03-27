@@ -7,7 +7,7 @@ namespace Auth.API.Features.UpdateUser;
 public record UpdateUserRoleCommand(int UserId, string Role) : ICommand<UpdateUserRoleResult>;
 public record UpdateUserRoleResult(bool IsSuccess);
 
-public class UpdateUserRoleHandler(IDocumentSession session)
+public class UpdateUserRoleHandler(IDocumentSession session, HttpClient httpClient, IConfiguration configuration)
 {
     public async Task<UpdateUserRoleResult> HandleAsync(UpdateUserRoleCommand command)
     {
@@ -20,6 +20,32 @@ public class UpdateUserRoleHandler(IDocumentSession session)
 
         session.Update(user);
         await session.SaveChangesAsync();
+
+        if (command.Role == "Employee")
+        {
+            try
+            {
+                var dutyApiBaseUrl = configuration["ApiSettings:DutyApiBaseUrl"] ?? "http://localhost:5000";
+
+                var requestUrl = $"{dutyApiBaseUrl.TrimEnd('/')}/employees";
+
+                var response = await httpClient.PostAsJsonAsync(requestUrl, new
+                {
+                    userId = user.Id,
+                    name = user.Username
+                });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Employee creation failed");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Employee oluşturulamadı: {ex.Message}");
+                return new UpdateUserRoleResult(false);
+            }
+        }
 
         return new UpdateUserRoleResult(true);
     }

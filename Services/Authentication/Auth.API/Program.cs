@@ -66,6 +66,7 @@ builder.Services.AddScoped<AuthorizationHandler>();
 builder.Services.AddScoped<GetUsersHandler>();
 builder.Services.AddScoped<UpdateUserRoleHandler>();
 builder.Services.AddScoped<DeleteUserHandler>();
+builder.Services.AddHttpClient<UpdateUserRoleHandler>();
 
 
 var app = builder.Build();
